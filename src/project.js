@@ -26,18 +26,19 @@ export class Project extends Scene {
         this.pig = new Pig();
         this.obstacles = [];
         this.OBSTACLE_OFFSET = 20;
-        this.NUM_WAVES = 5;
+        this.NUM_WAVES = 3;
         this.NUM_OBSTACLES = this.NUM_WAVES*2;
         for (let i=0; i<this.NUM_WAVES; i++)
         {
             // calculate offset
-            this.obstacles.push(new Obstacle(i*this.OBSTACLE_OFFSET));
-            this.obstacles.push(new Obstacle(i*this.OBSTACLE_OFFSET));
+            this.obstacles.push(new Obstacle(getRandomNumber(3), getRandomNumber(3), i*this.OBSTACLE_OFFSET));
+            this.obstacles.push(new Obstacle(getRandomNumber(3), getRandomNumber(3), i*this.OBSTACLE_OFFSET));
         }
 
         this.shapes = { 
             box_1: new Cube(),
             box_2: new Cube(),
+            sphere_3: new defs.Subdivision_Sphere(3),
             axis: new Axis_Arrows(),
             ground: new Cube(),
             cone: new defs.Subdivision_Sphere(2),
@@ -53,12 +54,16 @@ export class Project extends Scene {
         // }
         this.materials = {
             obstacle: new Material(new defs.Phong_Shader(), {ambient: 0.4, diffusivity: 0.6, color: hex_color("#ff0000")}),
-            ground: new Material(new defs.Phong_Shader(), {ambient: 0.4, diffusivity: 0.4, color: hex_color("#a17664")}),
             sky: new Material(new Textured_Phong(), {
                 color: hex_color("#000000"),
                 ambient: 1.0, diffusivity: 0.1, specularity: 0.1,
-                texture: new Texture("assets/night_sky.jpg", "NEAREST")
-            })
+                texture: new Texture("assets/images/cloudy.jpeg", "NEAREST")
+            }),
+            ground: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"),
+                ambient: 1.0, diffusivity: 0.1, specularity: 0.1,
+                texture: new Texture("assets/images/grass.jpeg", "NEAREST")
+            }),
         }
 
         this.currentPosition = "center";
@@ -66,17 +71,15 @@ export class Project extends Scene {
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
         this.ground_transform = Mat4.identity()
         .times(Mat4.translation(0, -5, -5))
-        .times(Mat4.scale(30, 1, 70))
+        // width, thickness, length
+        .times(Mat4.scale(60, 1, 125))
         .times(Mat4.translation(0, 0, -0.5))
     }
 
     make_control_panel() {
-        this.key_triggered_button("Console Log", ["c"], () => {
-            for (let i=0; i<this.NUM_OBSTACLES; i++)
-            {
-                console.log(this.obstacles[i].position[2]);
-            }
-        })
+        // this.key_triggered_button("Console Log", ["c"], () => {
+        //         console.log(this.obstacles);
+        // })
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
             if (!this.pig.right && !this.pig.left) {
                 this.pig.left = !this.pig.left;
@@ -227,17 +230,17 @@ export class Project extends Scene {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             program_state.set_camera(
                 Mat4.identity()
-                .times(Mat4.translation(0, -2, -50.7))
-                .times(Mat4.rotation(Math.PI/8, 1, 0, 0))
+                .times(Mat4.translation(0, -2, -58))
+                .times(Mat4.rotation(Math.PI/12, 1, 0, 0))
 
             
             );
             // program_state.set_camera(Mat4.rotation(0,0,0));
         }
         program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, 1, 200);
+            Math.PI / 4, context.width / context.height, 1, 500);
         
-        const light_position = vec4(10, 10, 10, 1);
+        const light_position = vec4(0, 10, 15, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
         // if (program_state.animation_time > 50 && program_state.animation_time < 100)
         // {
@@ -254,9 +257,9 @@ export class Project extends Scene {
         model_transform = model_transform.times(Mat4.scale(1, 1, 1))
                                          .times(Mat4.translation(0, 0, -1));
         // this.shapes.box_1.draw(context, program_state, model_transform, this.materials.obstacle);
-        this.shapes.spike.draw(context, program_state, model_transform, this.materials.obstacle);
+        // this.shapes.spike.draw(context, program_state, model_transform, this.materials.obstacle);
         this.shapes.ground.draw(context, program_state, this.ground_transform, this.materials.ground)
-        this.shapes.sphere_3.draw(context, program_state, Mat4.scale(100, 100, 100), this.materials.sky);
+        this.shapes.sphere_3.draw(context, program_state, Mat4.scale(100, 100, 200), this.materials.sky);
 
         // draw obstacles
         for (let i=this.NUM_OBSTACLES-1; i>=0; i--)
@@ -269,7 +272,9 @@ export class Project extends Scene {
             {
                 // 'remove' object, and add a new one
                 // randomize the position, type, and lane
-                this.obstacles[i].position = this.obstacles[i].position.times(Mat4.translation(0, 0, -(this.OBSTACLE_OFFSET+80)))
+                this.obstacles[i].setTypeID(getRandomNumber(3));
+                this.obstacles[i].setLane(getRandomNumber(3));
+                this.obstacles[i].resetPosition();
             }
         }
 
