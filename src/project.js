@@ -2,12 +2,17 @@ import {defs, tiny} from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
 import { Text_Line } from './examples/text-demo.js';
 import { Pig } from './pig.js';
+import { Obstacle } from './obstacle.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
 } = tiny;
 
 const {Cube, Axis_Arrows, Textured_Phong, Tetrahedron} = defs
+
+const getRandomNumber = max => {
+    return Math.floor(Math.random()*max)
+}
 
 export class Project extends Scene {
     /**
@@ -17,15 +22,25 @@ export class Project extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-
+        this.END_OF_SCREEN = 40;
         this.pig = new Pig();
+        this.obstacles = [];
+        this.OBSTACLE_OFFSET = 20;
+        this.NUM_WAVES = 5;
+        this.NUM_OBSTACLES = this.NUM_WAVES*2;
+        for (let i=0; i<this.NUM_WAVES; i++)
+        {
+            // calculate offset
+            this.obstacles.push(new Obstacle(i*this.OBSTACLE_OFFSET));
+            this.obstacles.push(new Obstacle(i*this.OBSTACLE_OFFSET));
+        }
 
         this.shapes = { 
             box_1: new Cube(),
             box_2: new Cube(),
             axis: new Axis_Arrows(),
             ground: new Cube(),
-            sphere_3: new defs.Subdivision_Sphere(3),
+            cone: new defs.Subdivision_Sphere(2),
             spike: new defs.Tetrahedron(0),
         }
         // this.shapes = {
@@ -56,7 +71,12 @@ export class Project extends Scene {
     }
 
     make_control_panel() {
-        this.key_triggered_button("Console Log", ["c"], () => {console.log(this)})
+        this.key_triggered_button("Console Log", ["c"], () => {
+            for (let i=0; i<this.NUM_OBSTACLES; i++)
+            {
+                console.log(this.obstacles[i].position[2]);
+            }
+        })
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
             if (!this.pig.right && !this.pig.left) {
                 this.pig.left = !this.pig.left;
@@ -208,7 +228,7 @@ export class Project extends Scene {
             program_state.set_camera(
                 Mat4.identity()
                 .times(Mat4.translation(0, -2, -50.7))
-                .times(Mat4.rotation(Math.PI/12, 1, 0, 0))
+                .times(Mat4.rotation(Math.PI/8, 1, 0, 0))
 
             
             );
@@ -233,12 +253,26 @@ export class Project extends Scene {
         let model_transform = Mat4.identity();
         model_transform = model_transform.times(Mat4.scale(1, 1, 1))
                                          .times(Mat4.translation(0, 0, -1));
+        // this.shapes.box_1.draw(context, program_state, model_transform, this.materials.obstacle);
         this.shapes.spike.draw(context, program_state, model_transform, this.materials.obstacle);
         this.shapes.ground.draw(context, program_state, this.ground_transform, this.materials.ground)
         this.shapes.sphere_3.draw(context, program_state, Mat4.scale(100, 100, 100), this.materials.sky);
 
+        // draw obstacles
+        for (let i=this.NUM_OBSTACLES-1; i>=0; i--)
+        {
+            if (this.obstacles[i].position[2][3] < this.END_OF_SCREEN)
+            {
+                this.obstacles[i].render(context, program_state, t, dt);
+            }
+            else
+            {
+                // 'remove' object, and add a new one
+                // randomize the position, type, and lane
+                this.obstacles[i].position = this.obstacles[i].position.times(Mat4.translation(0, 0, -(this.OBSTACLE_OFFSET+80)))
+            }
+        }
 
-       
 
 
 
