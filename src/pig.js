@@ -15,25 +15,28 @@ export class Pig{
 
 
         this.shapes = {
-            pig: new Shape_From_File("assets/workingpig.obj"),
+            pig: new Shape_From_File("assets/pigbody.obj"),
             pig_leg: new Shape_From_File("assets/pigleg.obj"),
-            pig_ears: new Shape_From_File("assets/pigear.obj"),
+            pig_ear: new Shape_From_File("assets/pigear.obj"),
+            pig_eye: new Shape_From_File("assets/pigeye.obj"),
+            pig_tail: new Shape_From_File("assets/pigtail.obj"),
         }
 
         this.materials = {
             pig: new Material(new Phong_Shader(), {
-                ambient: 0.5, diffusivity: 0,color:hex_color("#FCD7DE"),
+                ambient: 0.8, diffusivity: 0,color:hex_color("#FFC0CB"),
+            }),
+            pigtail: new Material(new Phong_Shader(), {
+                ambient: 0.5, diffusivity: 0,color:hex_color("#FFC0CB"),
+            }),
+            pigeye: new Material(new Phong_Shader(), {
+                ambient: 0.5, diffusivity: 0,color:hex_color("#000000"),
             })
         }
 
 
         this.coordinates = {
             x: 0,
-            y: 1,
-            z: 0,
-            r: 1.1,
-            phi: Math.PI / 2,
-            theta: Math.PI / 2,
         }
 
         this.left_pos = false;
@@ -42,7 +45,6 @@ export class Pig{
 
         this.left = 0;
         this.right = 0;
-        this.forward = 0;
         this.jump = 0;
 
 
@@ -58,25 +60,12 @@ export class Pig{
 
         this.left_temp = 0;
         this.left_v = 0;
-        this.moving_left = false;
 
         this.right_temp = 0;
         this.right_v = 0;
-        this.moving_right = false;
-
     }
 
-    getCoords() {
-        return this.coordinates;
-    }
-
-    jumpCharacter() {
-
-
-        // if(this.forward) {
-        //     this.THETA += 0.03;
-        //     this.coordinates.theta -= 0.03;
-        // }
+    jumpPig() {
 
         if (this.temp >= 1 && this.temp <= 3 && !this.downwards) {
             this.jump_v += 0.005;
@@ -95,7 +84,7 @@ export class Pig{
                 this.jump_v = 0;
             }
         }
-        return (this.temp - 1);
+        return {height: this.temp - 1};
     }
 
 
@@ -124,37 +113,7 @@ export class Pig{
 
 
 
-    moveCharacter() {
-
-        // if (this.right) {
-        //     if (!this.right_pos) {
-        //         // this.PHI += 0.03;
-        //         this.coordinates.x -= 0.03;
-        //     }
-        //     if (this.left_pos) {
-        //         this.left_pos = false;
-        //         this.center_pos = true;
-        //     }
-        //     else if (this.center_pos) {
-        //         this.right_pos = true;
-        //         this.center_pos = false;
-        //     }
-        // }
-        // if (this.left) {
-        //     if (!this.left_pos) {
-        //         // this.PHI -= 0.03;
-        //         this.coordinates.x += 0.03;
-        //     }
-        //     if (this.right_pos) {
-        //         this.right_pos = false;
-        //         this.center_pos = true;
-        //     }
-        //     else if (this.center_pos) {
-        //         this.left_pos = true;
-        //         this.center_pos = false;
-        //     }
-        // }
-
+    movePig() {
 
         if (this.left) {
             if (this.left_pos) {
@@ -175,7 +134,6 @@ export class Pig{
                     if (this.left_temp >= 3) {
                         this.left = false;
                         this.left_temp = 0;
-                        this.moving_left = false;
                         this.left_v = 0;
                         this.center_pos = false;
                         this.left_pos = true;
@@ -187,7 +145,6 @@ export class Pig{
                     if (this.left_temp >= 3) {
                         this.left = false;
                         this.left_temp = 0;
-                        this.moving_left = false;
                         this.left_v = 0;
                         this.center_pos = true;
                         this.right_pos = false;
@@ -220,7 +177,6 @@ export class Pig{
                         this.right_pos = true;
                         this.right = false;
                         this.right_temp = 0;
-                        this.moving_right = false;
                         this.right_v = 0;
                         return {x: this.coordinates.x};
                     }
@@ -231,7 +187,6 @@ export class Pig{
                         this.left_pos = false;
                         this.right = false;
                         this.right_temp = 0;
-                        this.moving_right = false;
                         this.right_v = 0;
                     }
                   
@@ -239,8 +194,6 @@ export class Pig{
             }
         }
 
-
-        // this.coordinates.x = this.coordinates.r * Math.cos(this.coordinates.phi) * Math.sin(this.coordinates.theta);
         console.log(this.coordinates);
         return {x: this.coordinates.x};
     }
