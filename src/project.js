@@ -17,31 +17,31 @@ export class Project extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-        
+
         this.pig = new Pig();
 
-        this.shapes = {
+        this.shapes = { 
             box_1: new Cube(),
             box_2: new Cube(),
             axis: new Axis_Arrows(),
-            // pig: new Shape_From_File("assets/testpig.obj"),
-            text: new Text_Line(35),
-
+            ground: new Cube(),
+            sphere_3: new defs.Subdivision_Sphere(3)
         }
-        console.log(this.shapes.box_1.arrays.texture_coord)
+        // this.shapes = {
+        //     box_1: new Cube(),
+        //     box_2: new Cube(),
+        //     axis: new Axis_Arrows(),
+        //     // pig: new Shape_From_File("assets/testpig.obj"),
+        //     text: new Text_Line(35),
 
-
-        // TODO:  Create the materials required to texture both cubes with the correct images and settings.
-        //        Make each Material from the correct shader.  Phong_Shader will work initially, but when
-        //        you get to requirements 6 and 7 you will need different ones.
+        // }
         this.materials = {
-            phong: new Material(new Textured_Phong(), {
-                color: hex_color("#ffffff"),
-            }),
-            texture: new Material(new Textured_Phong(), {
-                color: hex_color("#ffffff"),
-                ambient: 0.5, diffusivity: 0.1, specularity: 0.1,
-                texture: new Texture("assets/stars.png")
+            obstacle: new Material(new defs.Phong_Shader(), {ambient: 0.4, diffusivity: 0.6, color: hex_color("#ff0000")}),
+            ground: new Material(new defs.Phong_Shader(), {ambient: 0.4, diffusivity: 0.4, color: hex_color("#a17664")}),
+            sky: new Material(new Textured_Phong(), {
+                color: hex_color("#000000"),
+                ambient: 1.0, diffusivity: 0.1, specularity: 0.1,
+                texture: new Texture("assets/night_sky.jpg", "NEAREST")
             }),
             pig: new Material(new Textured_Phong(), {
                 color: hex_color("#FCD7DE"),
@@ -68,11 +68,11 @@ export class Project extends Scene {
 
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.ground_transform = Mat4.identity()
+        .times(Mat4.translation(0, -5, -5))
+        .times(Mat4.scale(30, 1, 70))
+        .times(Mat4.translation(0, 0, -0.5))
     }
-
-
-
-
     getPrev() {
         if (this.pig.left || this.pig.right) {
             if (this.pig.left) {
@@ -87,12 +87,8 @@ export class Project extends Scene {
         }
     }
 
-    getHorizontalPosition() {
-        
-    }
-
-
     make_control_panel() {
+        this.key_triggered_button("Console Log", ["c"], () => {console.log(this)})
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
             // this.moveLeft;
             this.getPrev();
@@ -130,14 +126,23 @@ export class Project extends Scene {
 
         let x = this.pig.moveCharacter().x;
 
-        pig_transform = pig_transform.times(Mat4.inverse(Mat4.translation(x - Math.PI / 2, 0, 0)));
+        pig_transform = pig_transform.times(Mat4.translation(0,3,15))
+                        .times(Mat4.scale(4,4,4))
+                        .times(Mat4.rotation(Math.PI/2,0,1,0));
+
+        pig_transform = pig_transform.times(Mat4.inverse(Mat4.translation(0, 0, x)));
 
         let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
 
         const max_pig_angle = Math.PI/4;
 
-        let pig_bounce = ((max_pig_angle/2) + (max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+        let pig_bounce = ((max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+
+        let pig_bounce_vertical = ((max_pig_angle/8)* (Math.sin(Math.PI*(t*2))));
+
+        let pig_bounce_horizontal = ((max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+
 
 
         if (this.pig.jump) {
@@ -150,12 +155,16 @@ export class Project extends Scene {
 
         if(this.pig.duck) {
             let duck = this.pig.pigDuck();
-            pig_transform = pig_transform.times(Mat4.scale(1, duck,1));
+            pig_transform = pig_transform.times(Mat4.translation(0,(duck-1.25),0))
+            .times(Mat4.scale(1, duck,1));
         }
 
 
         // if (t % 2 == 0) {
-        //     pig_transform = pig_transform.times(Mat4.rotation(-pig_bounce,1,0,0));
+        if (!this.pig.duck) {
+            pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0))
+                            .times(Mat4.translation(0,pig_bounce_vertical,pig_bounce_horizontal));
+        }
         // }
         // else {
         //     pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0));
@@ -163,19 +172,26 @@ export class Project extends Scene {
 
 
         let pig_front_right_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
-        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        // .times(Mat4.rotation(Math.PI/3,1,0,0));
+
 
         let pig_front_left_leg = pig_transform.times(Mat4.translation(0, -0.8,-0.75))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
         .times(Mat4.rotation(Math.PI/3,1,0,0));
 
-        let pig_back_right_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,-0.75))
-        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
+
+        let pig_back_right_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+
+
 
         
-        let pig_back_left_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,0.75))
+        let pig_back_left_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,-0.75))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
-        .times(Mat4.rotation(Math.PI/3,1,0,0));
+        .times(Mat4.rotation(Math.PI/3,1,0,0))
+
+
 
 
         this.pig.shapes.pig.draw(context, program_state, pig_transform, this.pig.materials.pig);
@@ -192,18 +208,37 @@ export class Project extends Scene {
     display(context, program_state) {
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-            // Define the global camera and projection matrices, which are stored in program_state.
-            program_state.set_camera(Mat4.translation(0, 0, -8));
+            program_state.set_camera(
+                Mat4.identity()
+                .times(Mat4.translation(0, -2, -50.7))
+                .times(Mat4.rotation(Math.PI/12, 1, 0, 0))
+
+            
+            );
+            // program_state.set_camera(Mat4.rotation(0,0,0));
         }
-
         program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, 1, 100);
-
+            Math.PI / 4, context.width / context.height, 1, 200);
+        
         const light_position = vec4(10, 10, 10, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+        // if (program_state.animation_time > 50 && program_state.animation_time < 100)
+        // {
+        //     console.log(program_state);
+        // }
+        // if (program_state.animation_time > 10000 && program_state.animation_time < 10100)
+        // {
+        //     console.log(program_state);
+        // }
+        // draw sky
 
         let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         let model_transform = Mat4.identity();
+        model_transform = model_transform.times(Mat4.scale(1, 1, 1))
+                                         .times(Mat4.translation(0, 0, -1));
+        this.shapes.box_1.draw(context, program_state, model_transform, this.materials.obstacle);
+        this.shapes.ground.draw(context, program_state, this.ground_transform, this.materials.ground)
+        this.shapes.sphere_3.draw(context, program_state, Mat4.scale(100, 100, 100), this.materials.sky);
 
 
        
