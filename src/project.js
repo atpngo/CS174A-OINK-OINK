@@ -87,11 +87,6 @@ export class Project extends Scene {
         }
     }
 
-    // getHorizontalPosition() {
-        
-    // }
-
-
     make_control_panel() {
         this.key_triggered_button("Console Log", ["c"], () => {console.log(this)})
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
@@ -131,14 +126,23 @@ export class Project extends Scene {
 
         let x = this.pig.moveCharacter().x;
 
-        pig_transform = pig_transform.times(Mat4.inverse(Mat4.translation(x - Math.PI / 2, 0, 0)));
+        pig_transform = pig_transform.times(Mat4.translation(0,3,15))
+                        .times(Mat4.scale(4,4,4))
+                        .times(Mat4.rotation(Math.PI/2,0,1,0));
+
+        pig_transform = pig_transform.times(Mat4.inverse(Mat4.translation(0, 0, x)));
 
         let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
 
         const max_pig_angle = Math.PI/4;
 
-        let pig_bounce = ((max_pig_angle/2) + (max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+        let pig_bounce = ((max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+
+        let pig_bounce_vertical = ((max_pig_angle/8)* (Math.sin(Math.PI*(t*2))));
+
+        let pig_bounce_horizontal = ((max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+
 
 
         if (this.pig.jump) {
@@ -151,12 +155,16 @@ export class Project extends Scene {
 
         if(this.pig.duck) {
             let duck = this.pig.pigDuck();
-            pig_transform = pig_transform.times(Mat4.scale(1, duck,1));
+            pig_transform = pig_transform.times(Mat4.translation(0,(duck-1.25),0))
+            .times(Mat4.scale(1, duck,1));
         }
 
 
         // if (t % 2 == 0) {
-        //     pig_transform = pig_transform.times(Mat4.rotation(-pig_bounce,1,0,0));
+        if (!this.pig.duck) {
+            pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0))
+                            .times(Mat4.translation(0,pig_bounce_vertical,pig_bounce_horizontal));
+        }
         // }
         // else {
         //     pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0));
@@ -164,19 +172,26 @@ export class Project extends Scene {
 
 
         let pig_front_right_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
-        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        // .times(Mat4.rotation(Math.PI/3,1,0,0));
+
 
         let pig_front_left_leg = pig_transform.times(Mat4.translation(0, -0.8,-0.75))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
         .times(Mat4.rotation(Math.PI/3,1,0,0));
 
-        let pig_back_right_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,-0.75))
-        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
+
+        let pig_back_right_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+
+
 
         
-        let pig_back_left_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,0.75))
+        let pig_back_left_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,-0.75))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
-        .times(Mat4.rotation(Math.PI/3,1,0,0));
+        .times(Mat4.rotation(Math.PI/3,1,0,0))
+
+
 
 
         this.pig.shapes.pig.draw(context, program_state, pig_transform, this.pig.materials.pig);

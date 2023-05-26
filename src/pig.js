@@ -79,14 +79,14 @@ export class Pig{
         // }
 
         if (this.temp >= 1 && this.temp <= 3 && !this.downwards) {
-            this.jump_v += 0.0025;
+            this.jump_v += 0.005;
             this.temp += this.jump_v;
             if (this.temp >= 3) {
                 this.downwards = true;
             }
         }
         else {
-            this.jump_v += 0.0025;
+            this.jump_v += 0.005;
             this.temp -= this.jump_v;
             if (this.temp <= 1) {
                 this.jump = false;
@@ -100,10 +100,10 @@ export class Pig{
 
 
     pigDuck() {
-        if (this.duck_temp <= 1 && this.duck_temp >= 0.6 && !this.ducking) {
+        if (this.duck_temp <= 1 && this.duck_temp >= 0.2 && !this.ducking) {
             this.duck_v += 0.001;
             this.duck_temp -= this.duck_v;
-            if (this.duck_temp <= 0.6) {
+            if (this.duck_temp <= 0.2) {
                 this.ducking = true;
             }
         }
@@ -160,33 +160,33 @@ export class Pig{
             if (this.left_pos) {
                 return {x: this.coordinates.x};
             }
-            else if (this.center_pos && this.left_temp >= -2 && this.left) {
+            else if (this.center_pos && this.left_temp <= 3 && this.left) {
                 this.left_v += 0.025;
-                this.left_temp -= this.left_v;
-                this.coordinates.x -= this.left_v;
+                this.left_temp += this.left_v;
+                this.coordinates.x += this.left_v;
             }
-            else if (this.right_pos && this.left_temp >= -4 && this.left) {
+            else if (this.right_pos && this.left_temp <= 3 && this.left) {
                 this.left_v += 0.025;
-                this.left_temp -= this.left_v;
-                this.coordinates.x -= this.left_v;
+                this.left_temp += this.left_v;
+                this.coordinates.x += this.left_v;
             }
             else {
                 if(this.center_pos) {
-                    if (this.left_temp <= -2) {
+                    if (this.left_temp >= 3) {
                         this.left = false;
-                        this.left_temp = -2;
+                        this.left_temp = 0;
                         this.moving_left = false;
                         this.left_v = 0;
                         this.center_pos = false;
                         this.left_pos = true;
-                        console.log("this is the right position");
+                        console.log("this is the left position");
                         return {x: this.coordinates.x};
                     }
                 }
                 if (this.right_pos) {
-                    if (this.left_temp <= -4) {
+                    if (this.left_temp >= 3) {
                         this.left = false;
-                        this.left_temp = -4;
+                        this.left_temp = 0;
                         this.moving_left = false;
                         this.left_v = 0;
                         this.center_pos = true;
@@ -202,30 +202,31 @@ export class Pig{
             if (this.right_pos) {
                 return {x: this.coordinates.x};
             }
-            else if (this.center_pos && this.right_temp <= 2) {
+            else if (this.center_pos && this.right_temp <= 3 && this.right) {
                 this.right_v += 0.025;
                 this.right_temp += this.right_v;
-                this.coordinates.x += this.right_v;
+                this.coordinates.x -= this.right_v;
             }
 
-            else if (this.left_pos && this.right_temp <= 0) {
+            else if (this.left_pos && this.right_temp <= 3) {
                 this.right_v += 0.025;
                 this.right_temp += this.right_v;
-                this.coordinates.x += this.right_v;
+                this.coordinates.x -= this.right_v;
             }
             else {
                 if(this.center_pos) {
-                    if (this.right_temp >= 2) {
+                    if (this.right_temp >= 3) {
                         this.center_pos = false;
                         this.right_pos = true;
                         this.right = false;
-                        this.right_temp = 2;
+                        this.right_temp = 0;
                         this.moving_right = false;
                         this.right_v = 0;
+                        return {x: this.coordinates.x};
                     }
                 }
                 else if (this.left_pos) {
-                    if (this.right_temp >= 0) {
+                    if (this.right_temp >= 3) {
                         this.center_pos = true;
                         this.left_pos = false;
                         this.right = false;
