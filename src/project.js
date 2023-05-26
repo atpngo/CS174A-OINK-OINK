@@ -1,6 +1,7 @@
 import {defs, tiny} from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
 import { Text_Line } from './examples/text-demo.js';
+import { Pig } from './pig.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
@@ -16,12 +17,14 @@ export class Project extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
+        
+        this.pig = new Pig();
 
         this.shapes = {
             box_1: new Cube(),
             box_2: new Cube(),
             axis: new Axis_Arrows(),
-            pig: new Shape_From_File("assets/testpig.obj"),
+            // pig: new Shape_From_File("assets/testpig.obj"),
             text: new Text_Line(35),
 
         }
@@ -47,6 +50,16 @@ export class Project extends Scene {
             }),
         }
 
+        this.currentPosition = "center";
+        this.prevMove = 0;
+        this.prevAngle = 0;
+        this.prevPhi = 0;
+        this.currentAngle = 0;
+
+
+        this.pig_pos = Mat4.identity();
+
+
 
         this.pig_horizontal_position = 0;
         this.pig_vertical_position = 0;
@@ -57,20 +70,124 @@ export class Project extends Scene {
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
+
+
+
+    getPrev() {
+        if (this.pig.left || this.pig.right) {
+            if (this.pig.left) {
+                this.prevMove = 'left';
+            }
+            else if (this.pig.right) {
+                this.prevMove = 'right';
+            }
+        }
+        else {
+            this.prevMove = null;
+        }
+    }
+
+    getHorizontalPosition() {
+        
+    }
+
+
     make_control_panel() {
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
-            this.pig_horizontal_position = this.pig_horizontal_position - 1;
+            // this.moveLeft;
+            this.getPrev();
+            this.prevAngle - this.pig.THETA;
+            this.prevPhi = this.pig.PHI;
+            this.pig.left = !this.pig.left;
+            // this.stopMovement('left');
         })
         this.key_triggered_button("Right", ['ArrowRight'], () => {
-            this.pig_horizontal_position = this.pig_horizontal_position + 1;
+            this.getPrev();
+            this.prevAngle - this.pig.THETA;
+            this.prevPhi = this.pig.PHI;
+            this.pig.right = !this.pig.right;
         })
         this.key_triggered_button("Jump", ['ArrowUp'], () => {
-            this.pig_jumping = true;
+            this.getPrev();
+            this.prevAngle = this.pig.THETA;
+            this.prevPhi = this.pig.PHI;
+            this.pig.jump = !this.pig.jump;
         })
         this.key_triggered_button("Duck", ['ArrowDown'], () => {
-            this.pig_position = this.pig_position + 5;
+            this.getPrev();
+            this.prevAngle = this.pig.THETA;
+            this.prevPhi = this.pig.PHI;
+            this.pig.duck = !this.pig.duck;
         })
     }
+
+    draw_pig(context,program_state, model_transform) {
+
+
+        let pig_transform = model_transform;
+
+      
+
+        let x = this.pig.moveCharacter().x;
+
+        pig_transform = pig_transform.times(Mat4.inverse(Mat4.translation(x - Math.PI / 2, 0, 0)));
+
+        let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
+
+        const max_pig_angle = Math.PI/4;
+
+        let pig_bounce = ((max_pig_angle/2) + (max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+
+
+        if (this.pig.jump) {
+            let jump_angle = this.pig.jumpCharacter();
+            pig_transform = pig_transform.times(Mat4.translation(0,jump_angle,0));
+            // pig_left_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
+            // .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
+        }
+
+
+        if(this.pig.duck) {
+            let duck = this.pig.pigDuck();
+            pig_transform = pig_transform.times(Mat4.scale(1, duck,1));
+        }
+
+
+        // if (t % 2 == 0) {
+        //     pig_transform = pig_transform.times(Mat4.rotation(-pig_bounce,1,0,0));
+        // }
+        // else {
+        //     pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0));
+        // }
+
+
+        let pig_front_right_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
+
+        let pig_front_left_leg = pig_transform.times(Mat4.translation(0, -0.8,-0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        .times(Mat4.rotation(Math.PI/3,1,0,0));
+
+        let pig_back_right_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,-0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
+
+        
+        let pig_back_left_leg = pig_transform.times(Mat4.translation(-1.75, -0.8,0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        .times(Mat4.rotation(Math.PI/3,1,0,0));
+
+
+        this.pig.shapes.pig.draw(context, program_state, pig_transform, this.pig.materials.pig);
+
+        this.pig.shapes.pig_leg.draw(context, program_state, pig_front_right_leg, this.pig.materials.pig);
+        this.pig.shapes.pig_leg.draw(context, program_state, pig_front_left_leg, this.pig.materials.pig);
+
+        this.pig.shapes.pig_leg.draw(context, program_state, pig_back_right_leg, this.pig.materials.pig);
+        this.pig.shapes.pig_leg.draw(context, program_state, pig_back_left_leg, this.pig.materials.pig);
+
+    }
+
 
     display(context, program_state) {
         if (!context.scratchpad.controls) {
@@ -88,47 +205,53 @@ export class Project extends Scene {
         let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         let model_transform = Mat4.identity();
 
-        const max_pig_angle =  0.167* Math.PI;
+
+       
 
 
-        let position = this.pig_horizontal_position;
+        // let position = this.pig_horizontal_position;
 
-        let pig_bounce = ((max_pig_angle/2) + (max_pig_angle/2)* (Math.sin(Math.PI*(t))));
-
-
-        let pig_transform = model_transform;
-
-        const max_jump_height = 2;
-
-        let pig_jump = ((max_jump_height/2) * (Math.sin(Math.PI*(t))));
-
-        let pig_rotate = ((180) + (4) * (Math.sin(Math.PI *(t))));
+        // let pig_bounce = ((max_pig_angle/2) + (max_pig_angle/2)* (Math.sin(Math.PI*(t))));
 
 
-        if (this.pig_jumping == true) {
-            pig_transform = model_transform.times(Mat4.translation(position,-pig_jump,1,0))
-                            // .times(Mat4.rotation(pig_bounce,1,0,0))
-                            // .times(Mat4.rotation(pig_rotate,0,0,1));
-            // this.pig_jumping = false;
-        }
-        else {
-        // if (t*1.1 % 2 == 0) {
-        pig_transform = model_transform.times(Mat4.translation(position,1,1,0))
-                            .times(Mat4.rotation(pig_bounce,1,0,0));
-        }
+        // let pig_transform = model_transform;
+
+        // const max_jump_height = 2;
+
+        // let pig_jump = ((max_jump_height/2) * (Math.sin(Math.PI*(t))));
+
+        // let pig_rotate = ((180) + (4) * (Math.sin(Math.PI *(t))));
+
+
+        // if (this.pig_jumping == true) {
+        //     pig_transform = model_transform.times(Mat4.translation(position,-pig_jump,1,0))
+        //                     // .times(Mat4.rotation(pig_bounce,1,0,0))
+        //                     // .times(Mat4.rotation(pig_rotate,0,0,1));
+        //     // this.pig_jumping = false;
         // }
         // else {
-        // pig_transform = model_transform.times(Mat4.translation(position,0,1,0))
-        //                     .times(Mat4.rotation(-pig_bounce,1,0,0));
-        // }
+ 
         
-
-        this.shapes.pig.draw(context, program_state, pig_transform, this.materials.pig);
+        this.draw_pig(context,program_state,model_transform);
         // TODO:  Draw the required boxes. Also update their stored matrices.
         // You can remove the folloeing line.
         // this.shapes.pig.draw(context, program_state, model_transform, this.materials.phong.override({color: hex_color("#ffff00")}));
     }
 }
+
+// moveLeft()
+// {
+//     let speed_factor = 2;
+//     this.pig_pos = this.pig_pos.times(Mat4.translation(0,0,speed_factor*-1));
+// }
+
+// jump() {
+//     let speed_factor = this.pig_bounce;
+// }
+
+// moveRight() {
+//     let speed_factor;
+// }
 
 
 
