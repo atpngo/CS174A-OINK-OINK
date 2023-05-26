@@ -75,7 +75,7 @@ export class Pig{
             }
         }
         else {
-            this.jump_v += 0.005;
+            this.jump_v += 0.0025;
             this.temp -= this.jump_v;
             if (this.temp <= 1) {
                 this.jump = false;
@@ -194,7 +194,7 @@ export class Pig{
             }
         }
 
-        console.log(this.coordinates);
+        // console.log(this.coordinates);
         return {x: this.coordinates.x};
     }
 
