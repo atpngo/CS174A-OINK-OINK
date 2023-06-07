@@ -28,6 +28,10 @@ export class Project extends Scene {
         this.OBSTACLE_OFFSET = 20;
         this.NUM_WAVES = 3;
         this.NUM_OBSTACLES = this.NUM_WAVES*2;
+        this.score_count = 0;
+        this.total_score = 0;
+        this.game_over = false;
+
         for (let i=0; i<this.NUM_WAVES; i++)
         {
             // calculate offset
@@ -43,6 +47,7 @@ export class Project extends Scene {
             ground: new Cube(),
             cone: new defs.Subdivision_Sphere(2),
             spike: new defs.Tetrahedron(0),
+            text: new Text_Line(35),
         }
         // this.shapes = {
         //     box_1: new Cube(),
@@ -52,6 +57,8 @@ export class Project extends Scene {
         //     text: new Text_Line(35),
 
         // }
+
+        const textured = new defs.Textured_Phong(1);
         this.materials = {
             obstacle: new Material(new defs.Phong_Shader(), {ambient: 0.4, diffusivity: 0.6, color: hex_color("#ff0000")}),
             sky: new Material(new Textured_Phong(), {
@@ -64,6 +71,8 @@ export class Project extends Scene {
                 ambient: 1.0, diffusivity: 0.1, specularity: 0.1,
                 texture: new Texture("assets/images/grass.jpeg", "NEAREST")
             }),
+            text_image: new Material(textured, 
+                {ambient: 1, diffusivity: 0, specularity: 0, texture: new Texture("assets/text.png")}),
         }
 
         this.currentPosition = "center";
@@ -100,7 +109,43 @@ export class Project extends Scene {
                 this.pig.duck = !this.pig.duck;
             }
         })
+        this.key_triggered_button("GameOver", ['g'], () => {
+            this.game_over = !this.game_over;
+        })
     }
+
+    draw_score(context, program_state, model_transform) {
+          // this.shapes.text.set_string("loading", context.context);
+
+          if (!this.game_over) {
+            this.score_count = this.score_count + 1;
+          }
+          if (this.score_count == 5) {
+              this.total_score = this.total_score + 5;
+              this.score_count = 0;
+          }
+          this.shapes.text.set_string(this.total_score.toString(), context.context);
+  
+  
+          let score_transform = model_transform.times(Mat4.translation(30,20,0));
+  
+          this.shapes.text.draw(context, program_state, score_transform, this.materials.text_image);
+          // this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
+  
+    }
+
+    draw_game_over(context, program_state, model_transform) {
+        // this.shapes.text.set_string("loading", context.context);
+        this.shapes.text.set_string("GAME OVER", context.context);
+
+
+        let message_transform = model_transform.times(Mat4.translation(0,15,0))
+                                    .times(Mat4.scale(2,2,2));
+
+        this.shapes.text.draw(context, program_state, message_transform, this.materials.text_image);
+        // this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
+
+  }
 
     draw_pig(context,program_state, model_transform) {
 
@@ -134,18 +179,16 @@ export class Project extends Scene {
 
 
             pig_transform = pig_transform.times(Mat4.translation(0,height,0))
-                            // .times(Mat4.rotation(jump_angle, 0, 0,1));
+            //                 .times(Mat4.rotation(jump_angle, 0, 0,1));
             // pig_left_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
             // .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
         }
-
 
         if(this.pig.duck) {
             let duck = this.pig.pigDuck();
             pig_transform = pig_transform.times(Mat4.translation(0,(duck-1.25),0))
             .times(Mat4.scale(1, duck,1));
         }
-
 
         // if (t % 2 == 0) {
         if (!this.pig.duck) {
@@ -227,7 +270,7 @@ export class Project extends Scene {
 
     display(context, program_state) {
         if (!context.scratchpad.controls) {
-            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+            // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             program_state.set_camera(
                 Mat4.identity()
                 .times(Mat4.translation(0, -2, -58))
@@ -262,29 +305,36 @@ export class Project extends Scene {
         this.shapes.sphere_3.draw(context, program_state, Mat4.scale(100, 100, 200), this.materials.sky);
 
         // draw obstacles
-        for (let i=this.NUM_OBSTACLES-1; i>=0; i--)
-        {
-            if (this.obstacles[i].position[2][3] < this.END_OF_SCREEN)
+
+        if (!this.game_over) {
+            for (let i=this.NUM_OBSTACLES-1; i>=0; i--)
             {
-                this.obstacles[i].render(context, program_state, t, dt);
+                if (this.obstacles[i].position[2][3] < this.END_OF_SCREEN)
+                {
+                    this.obstacles[i].render(context, program_state, t, dt);
+                }
+                else
+                {
+                    // 'remove' object, and add a new one
+                    // randomize the position, type, and lane
+                    this.obstacles[i].setTypeID(getRandomNumber(3));
+                    this.obstacles[i].setLane(getRandomNumber(3));
+                    this.obstacles[i].resetPosition();
+                }
             }
-            else
-            {
-                // 'remove' object, and add a new one
-                // randomize the position, type, and lane
-                this.obstacles[i].setTypeID(getRandomNumber(3));
-                this.obstacles[i].setLane(getRandomNumber(3));
-                this.obstacles[i].resetPosition();
-            }
+
+
+
+
+            // else {
+    
+            
+            this.draw_pig(context,program_state,model_transform);
         }
-
-
-
-
-        // else {
- 
-        
-        this.draw_pig(context,program_state,model_transform);
+        else {
+            this.draw_game_over(context,program_state,model_transform);
+        }
+        this.draw_score(context,program_state,model_transform);
     }
 }
 

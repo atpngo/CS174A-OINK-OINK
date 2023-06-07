@@ -117,6 +117,7 @@ export class Pig{
 
         if (this.left) {
             if (this.left_pos) {
+                this.left = false;
                 return {x: this.coordinates.x};
             }
             else if (this.center_pos && this.left_temp <= 3 && this.left) {
@@ -157,6 +158,7 @@ export class Pig{
 
         if (this.right) {
             if (this.right_pos) {
+                this.right = false;
                 return {x: this.coordinates.x};
             }
             else if (this.center_pos && this.right_temp <= 3 && this.right) {
