@@ -31,6 +31,15 @@ export class Project extends Scene {
         this.score_count = 0;
         this.total_score = 0;
         this.game_over = false;
+        this.resetFlag = false;
+        this.game_start = false;
+        this.background_sound_flag = false;
+        this.blinking_flag = false;
+        this.blinking_count = 0;
+
+        this.background_sound = new Audio("assets/audio/background.mp3");
+        this.pig_sound = new Audio("assets/audio/pig-grunt.mp3");
+
 
         for (let i=0; i<this.NUM_WAVES; i++)
         {
@@ -89,33 +98,90 @@ export class Project extends Scene {
         // this.key_triggered_button("Console Log", ["c"], () => {
         //         console.log(this.obstacles);
         // })
+        this.key_triggered_button("Start", ['Enter'], () => {
+            if (!this.game_start && !this.game_over) {
+            this.game_start = true;
+
+            // loop background audio
+            // if (typeof this.background_sound.loop == 'boolean')
+            // {
+            //     this.background_sound.loop = true;
+            // }
+            // else
+            // {
+            //     this.background_sound.addEventListener('ended', function() {
+            //         this.currentTime = 0;
+            //         this.play();
+            //     }, false);
+            // }
+            this.background_sound.loop = true;
+            this.background_sound_flag = true;
+
+            this.background_sound.play();
+            }
+        });
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
-            if (!this.pig.right && !this.pig.left) {
+
+            if (!this.pig.right && !this.pig.left && this.game_start) {
                 this.pig.left = !this.pig.left;
+                this.pig_sound.play();
             }
         })
         this.key_triggered_button("Right", ['ArrowRight'], () => {
-            if (!this.pig.left && !this.pig.right) {
+            if (!this.pig.left && !this.pig.right && this.game_start) {
                 this.pig.right = !this.pig.right;
+                this.pig_sound.play();
             }
         })
         this.key_triggered_button("Jump", ['ArrowUp'], () => {
-            if (!this.pig.duck && !this.pig.jump) {
+            if (!this.pig.duck && !this.pig.jump && this.game_start) {
                 this.pig.jump = !this.pig.jump;
+                this.pig_sound.play();
+
             }
         })
         this.key_triggered_button("Duck", ['ArrowDown'], () => {
-            if (!this.pig.duck && !this.pig.jump) {
+            if (!this.pig.duck && !this.pig.jump  && this.game_start) {
                 this.pig.duck = !this.pig.duck;
+                this.pig_sound.play();
             }
         })
         this.key_triggered_button("GameOver", ['g'], () => {
             this.game_over = !this.game_over;
         })
+        this.key_triggered_button("Toggle Background Music", ['m'], () => {
+            // loop background audio
+            if (this.game_start) {
+                if (this.background_sound_flag) {
+                    this.background_sound.pause(); 
+                }
+                else {
+                    this.background_sound.play(); 
+                }
+                this.background_sound_flag = !this.background_sound_flag;
+            }
+        });
+        this.key_triggered_button("Restart Game", ["Escape"], () => {
+            this.reset();
+            this.resetFlag = true;
+            console.log(this.resetFlag);
+            this.background_sound_flag = false;
+            this.background_sound.pause();
+        });
+    }
+
+    reset() {
+        this.score_count = 0;
+        this.total_score = 0;
+        this.game_over = false;
+        this.pig = new Pig();
+        this.game_start = false;
+        
     }
 
     draw_score(context, program_state, model_transform) {
-          // this.shapes.text.set_string("loading", context.context);
+
+          let t = program_state.animation_time / 1000;
 
           if (!this.game_over) {
             this.score_count = this.score_count + 1;
@@ -126,29 +192,173 @@ export class Project extends Scene {
           }
           this.shapes.text.set_string(this.total_score.toString(), context.context);
   
-  
-          let score_transform = model_transform.times(Mat4.translation(30,20,0));
-  
-          this.shapes.text.draw(context, program_state, score_transform, this.materials.text_image);
+
+          if (this.game_over) {
+            this.blinking_count = this.blinking_count + 1;
+          }
+          if (this.blinking_count == 15) {
+            this.blinking_flag = !this.blinking_flag;
+            this.blinking_count = 0;
+          }
+
+          let score_transform = model_transform;
+
+          score_transform = score_transform.times(Mat4.translation(30,20,0));
+          
+          if (this.game_over) {
+            this.shapes.text.draw(context, program_state, score_transform, this.blinking_flag ?
+                this.materials.text_image.override({color: hex_color("#FF0000")}) : this.materials.text_image) ;
+          }
+          else {
+            this.shapes.text.draw(context, program_state, score_transform, this.materials.text_image);
+          }
           // this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
   
     }
 
     draw_game_over(context, program_state, model_transform) {
-        // this.shapes.text.set_string("loading", context.context);
         this.shapes.text.set_string("GAME OVER", context.context);
 
+        
 
-        let message_transform = model_transform.times(Mat4.translation(0,15,0))
-                                    .times(Mat4.scale(2,2,2));
+        let message_transform = model_transform.times(Mat4.translation(-20,10,-20))
+                                    .times(Mat4.scale(3,3,3));
 
         this.shapes.text.draw(context, program_state, message_transform, this.materials.text_image);
         // this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
 
   }
 
-    draw_pig(context,program_state, model_transform) {
+    draw_start(context, program_state, model_transform) {
+        // this.shapes.text.set_string("loading", context.context);
+        this.shapes.text.set_string("Press Enter to Start", context.context);
 
+
+        let message_transform = model_transform.times(Mat4.translation(-30,15,-10))
+                                    .times(Mat4.scale(2,2,2));
+
+        this.shapes.text.draw(context, program_state, message_transform, this.materials.text_image);
+        // this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
+
+    }
+
+    draw_loading_pig(context,program_state,model_transform) {
+        let pig_transform = model_transform;
+
+
+        pig_transform = pig_transform.times(Mat4.translation(0,3,20))
+                        .times(Mat4.scale(5,5,5))
+                        .times(Mat4.rotation(-Math.PI/2,0,1,0));
+
+
+        let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
+
+        const max_pig_angle = Math.PI/4;
+
+        let pig_bounce = ((max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+
+        let pig_bounce_vertical = ((max_pig_angle/8)* (Math.sin(Math.PI*(t*2))));
+
+        let pig_bounce_horizontal = ((max_pig_angle/2)* (Math.sin(Math.PI*(t))));
+
+
+
+        // if (this.pig.jump) {
+        //     let height = this.pig.jumpPig().height;
+        //     // let jump_angle = this.pig.jumpPig().angle;
+
+
+        //     pig_transform = pig_transform.times(Mat4.translation(0,height,0))
+        //     //                 .times(Mat4.rotation(jump_angle, 0, 0,1));
+        //     // pig_left_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
+        //     // .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
+        // }
+
+        // if(this.pig.duck) {
+        //     let duck = this.pig.pigDuck();
+        //     pig_transform = pig_transform.times(Mat4.translation(0,(duck-1.25),0))
+        //     .times(Mat4.scale(1, duck,1));
+        // }
+
+        // // if (t % 2 == 0) {
+        // if (!this.pig.duck) {
+            pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0))
+                            .times(Mat4.translation(0,pig_bounce_vertical,pig_bounce_horizontal));
+        // }
+        // }
+        // else {
+        //     pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0));
+        // }
+
+
+        let pig_tail = pig_transform.times(Mat4.translation(-1.25, 0, 0))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        .times(Mat4.rotation(Math.PI/2,0,1,0));
+
+
+        let pig_right_ear = pig_transform.times(Mat4.translation(0.75, 0.5, 0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        .times(Mat4.rotation(Math.PI,0,1,0))
+        .times(Mat4.rotation(Math.PI,1,0,0));
+
+        let pig_left_ear = pig_transform.times(Mat4.translation(0.75, 0.5, -0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        // .times(Mat4.rotation(Math.PI,0,1,0))
+        .times(Mat4.rotation(Math.PI,1,0,0));
+
+
+        let pig_front_right_leg = pig_transform.times(Mat4.translation(0.75, -0.5,0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        // .times(Mat4.rotation(Math.PI/3,1,0,0));
+
+
+        let pig_front_left_leg = pig_transform.times(Mat4.translation(0.75, -0.5,-0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        .times(Mat4.rotation(Math.PI/3,1,0,0));
+
+
+        let pig_back_right_leg = pig_transform.times(Mat4.translation(-0.75, -0.5,0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+
+        
+
+
+        let pig_left_eye = pig_transform.times(Mat4.translation(1.25, 0.25,-0.25))
+        .times(Mat4.inverse(Mat4.scale(12, 12,12)));
+
+        let pig_right_eye = pig_transform.times(Mat4.translation(1.25, 0.25,0.25))
+        .times(Mat4.inverse(Mat4.scale(12, 12,12)));
+
+        
+        let pig_back_left_leg = pig_transform.times(Mat4.translation(-0.75, -0.5,-0.75))
+        .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
+        .times(Mat4.rotation(Math.PI/3,1,0,0))
+
+
+
+
+        this.pig.shapes.pig.draw(context, program_state, pig_transform, this.pig.materials.pig);
+
+        this.pig.shapes.pig_leg.draw(context, program_state, pig_front_right_leg, this.pig.materials.pig);
+        this.pig.shapes.pig_leg.draw(context, program_state, pig_front_left_leg, this.pig.materials.pig);
+
+        this.pig.shapes.pig_leg.draw(context, program_state, pig_back_right_leg, this.pig.materials.pig);
+        this.pig.shapes.pig_leg.draw(context, program_state, pig_back_left_leg, this.pig.materials.pig);
+
+        this.pig.shapes.pig_ear.draw(context, program_state, pig_left_ear, this.pig.materials.pigtail);
+        this.pig.shapes.pig_ear.draw(context, program_state, pig_right_ear, this.pig.materials.pigtail);
+
+
+        this.pig.shapes.pig_eye.draw(context,program_state, pig_left_eye, this.pig.materials.pigeye);
+        this.pig.shapes.pig_eye.draw(context,program_state, pig_right_eye, this.pig.materials.pigeye);
+
+
+        this.pig.shapes.pig_tail.draw(context,program_state, pig_tail, this.pig.materials.pigtail);
+
+    }
+
+    draw_pig(context,program_state, model_transform) {
 
         let pig_transform = model_transform;
 
@@ -306,7 +516,7 @@ export class Project extends Scene {
 
         // draw obstacles
 
-        if (!this.game_over) {
+        if (!this.game_over && this.game_start) {
             for (let i=this.NUM_OBSTACLES-1; i>=0; i--)
             {
                 if (this.obstacles[i].position[2][3] < this.END_OF_SCREEN)
@@ -330,11 +540,16 @@ export class Project extends Scene {
     
             
             this.draw_pig(context,program_state,model_transform);
+            this.draw_score(context,program_state,model_transform);
+        }
+        else if (this.game_over) {
+            this.draw_game_over(context,program_state,model_transform);
+            this.draw_score(context,program_state,model_transform);
         }
         else {
-            this.draw_game_over(context,program_state,model_transform);
+            this.draw_start(context,program_state,model_transform);
+            this.draw_loading_pig(context,program_state,model_transform);
         }
-        this.draw_score(context,program_state,model_transform);
     }
 }
 
