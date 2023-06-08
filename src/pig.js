@@ -46,7 +46,7 @@ export class Pig{
         this.left = 0;
         this.right = 0;
         this.jump = 0;
-
+        this.duck = 0;
 
 
         this.temp = 1;
@@ -138,7 +138,6 @@ export class Pig{
                         this.left_v = 0;
                         this.center_pos = false;
                         this.left_pos = true;
-                        console.log("this is the left position");
                         return {x: this.coordinates.x};
                     }
                 }
@@ -149,7 +148,6 @@ export class Pig{
                         this.left_v = 0;
                         this.center_pos = true;
                         this.right_pos = false;
-                        console.log("this is the center position");
                         return {x: this.coordinates.x};
                     }
                 }
