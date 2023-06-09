@@ -116,13 +116,6 @@ export class Project extends Scene {
             //         this.play();
             //     }, false);
             // }
-            this.background_sound.loop = true;
-            this.background_sound_flag = true;
-
-
-
-
-            this.background_sound.play();
             }
         });
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
@@ -309,6 +302,9 @@ export class Project extends Scene {
                 this.loading_count = 0;
                 this.game_start = true;
                 this.game_loading = false;
+                this.background_sound.loop = true;
+                this.background_sound_flag = true;
+                this.background_sound.play();
             }
 
             let loading_jump = Math.sin(Math.PI*(this.loading_count));
@@ -316,7 +312,6 @@ export class Project extends Scene {
             if (this.game_loading) {
                 pig_transform = pig_transform.times(Mat4.rotation(pig_rotate,0,1,0))
                 .times(Mat4.translation(0,loading_jump,0));
-
             }
 
 
