@@ -44,12 +44,11 @@ const OFFSETS = {
 }
 export class Obstacle
 {
-    constructor(lane, type, offset, speed_multiplier)
+    constructor(lane, type, offset)
     {
         this.position = Mat4.identity();
         this.avoided = false;
         this.offset = offset;
-        this.speed_multiplier = speed_multiplier;
         // get random lane position
         this.lane = lane;
         this.type_id = type;

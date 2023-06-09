@@ -3,6 +3,7 @@ import { Shape_From_File } from './examples/obj-file-demo.js';
 import { Text_Line } from './examples/text-demo.js';
 import { Pig } from './pig.js';
 import { Obstacle } from './obstacle.js';
+import { Coin } from './coin.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture,
@@ -58,11 +59,14 @@ export class Project extends Scene {
         this.SPEED_INCREMENT = 0.05;
         this.game_loading = false;
         this.loading_count = 0;
-
+        this.coins = [];
         this.background_sound = new Audio("assets/audio/background.mp3");
         this.pig_sound = new Audio("assets/audio/pig-grunt.mp3");
 
-
+        for (let i=0; i<this.NUM_WAVES; i++)
+        {
+            this.coins.push(new Coin(getRandomNumber(3), i*this.OBSTACLE_OFFSET));
+        }
         for (let i=0; i<this.NUM_WAVES; i++)
         {
             // calculate offset
@@ -100,6 +104,8 @@ export class Project extends Scene {
             }),
             text_image: new Material(new Textured_Phong(), 
                 {ambient: 1, diffusivity: 0, specularity: 0, texture: new Texture("assets/text.png")}),
+            
+
         }
 
         this.currentPosition = "center";
@@ -114,10 +120,10 @@ export class Project extends Scene {
     }
 
     make_control_panel() {
-        this.key_triggered_button("Console Log", ["c"], () => {
-                console.log(this.pig.duck);
-                console.log(this.pig.ducking);
-        })
+        // this.key_triggered_button("Console Log", ["c"], () => {
+        //         console.log(this.pig.duck);
+        //         console.log(this.pig.ducking);
+        // })
         this.key_triggered_button("Start", ['Enter'], () => {
             if (!this.game_start && !this.game_over) {
             this.game_loading = true;
@@ -314,7 +320,7 @@ export class Project extends Scene {
             }
     
             let pig_rotate = ((Math.PI)*this.loading_count);
-            console.log(this.loading_count);
+            // console.log(this.loading_count);
     
             if (this.loading_count >= 1) {
                 this.loading_count = 0;
@@ -548,10 +554,23 @@ export class Project extends Scene {
         return false;;
     }
 
+    check_coin_collision(pig, coin)
+    {
+        if ((pig.left_pos && coin.lane === 0) || (pig.right_pos && coin.lane === 2) || (!pig.right_pos && !pig.left_pos && coin.lane === 1))
+        {
+            if (coin.position[2][3] >= this.PIG_FRONT && coin.position[2][3] <= this.PIG_BACK && !coin.collided)
+            {
+                coin.collided = true;
+                return true;
+            }
+        }
+        
+    }
+
 
     display(context, program_state) {
         if (!context.scratchpad.controls) {
-            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+            // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             program_state.set_camera(
                 Mat4.identity()
                 .times(Mat4.translation(0, -2, -58))
@@ -583,9 +602,27 @@ export class Project extends Scene {
         // this.shapes.box_1.draw(context, program_state, model_transform, this.materials.obstacle);
         // this.shapes.spike.draw(context, program_state, model_transform, this.materials.obstacle);
         this.shapes.sphere_3.draw(context, program_state, Mat4.scale(100, 100, 200), this.materials.sky);
-
+        
         // increment speed multiplier
         if (!this.game_over && this.game_start) {
+
+            for (let i=this.coins.length-1; i>=0; i--)
+            {
+                if (this.coins[i].position[2][3] < this.END_OF_SCREEN)
+                {
+                    this.coins[i].render(context, program_state, this.speed_multiplier+Math.floor(this.total_score/100)*this.SPEED_INCREMENT);
+                    if (this.check_coin_collision(this.pig, this.coins[i]))
+                    {
+                        console.log("coin collected");
+                    }
+                }
+                else
+                {
+                    this.coins[i].setLane(getRandomNumber(3));
+                    this.coins[i].resetPos();
+                    this.coins[i].collided = false;
+                }
+            }
 
             for (let i=this.NUM_OBSTACLES-1; i>=0; i--)
             {
