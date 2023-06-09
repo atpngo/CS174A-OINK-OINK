@@ -10,9 +10,6 @@ const {Cube, Axis_Arrows, Textured_Phong, Phong_Shader} = defs;
 export class Pig{
     constructor() {
 
-        this.THETA = Math.PI / 2;
-        this.PHI = Math.PI / 2;
-
 
         this.shapes = {
             pig: new Shape_From_File("assets/pigbody.obj"),
