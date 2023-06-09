@@ -41,6 +41,7 @@ export class Project extends Scene {
         this.PIG_FRONT = 12;
         this.PIG_BACK = 26;
         this.speed_multiplier = 1;
+        this.coins_collected = 0;
         this.pig = new Pig();
         this.obstacles = [];
         this.OBSTACLE_OFFSET = 40;
@@ -614,6 +615,8 @@ export class Project extends Scene {
                     if (this.check_coin_collision(this.pig, this.coins[i]))
                     {
                         console.log("coin collected");
+                        this.coins_collected += 1;
+                        this.total_score += 50;
                     }
                 }
                 else
@@ -657,6 +660,7 @@ export class Project extends Scene {
             this.draw_game_over(context,program_state,model_transform);
             this.draw_score(context,program_state,model_transform);
             this.speed_multiplier = 1;
+            this.coins_collected = 0;
             // reset obstacles
             this.obstacles = [];
             for (let i=0; i<this.NUM_WAVES; i++)
