@@ -67,7 +67,6 @@ export class Project extends Scene {
 
         // }
 
-        const textured = new defs.Textured_Phong(1);
         this.materials = {
             obstacle: new Material(new defs.Phong_Shader(), {ambient: 0.4, diffusivity: 0.6, color: hex_color("#ff0000")}),
             sky: new Material(new Textured_Phong(), {
@@ -80,7 +79,7 @@ export class Project extends Scene {
                 ambient: 1.0, diffusivity: 0.1, specularity: 0.1,
                 texture: new Texture("assets/images/grass.jpeg", "NEAREST")
             }),
-            text_image: new Material(textured, 
+            text_image: new Material(new Textured_Phong(), 
                 {ambient: 1, diffusivity: 0, specularity: 0, texture: new Texture("assets/text.png")}),
         }
 
@@ -234,11 +233,15 @@ export class Project extends Scene {
         this.shapes.text.set_string("Press Enter to Start", context.context);
 
 
-        let message_transform = model_transform.times(Mat4.translation(-30,15,-10))
+        let message_transform = model_transform.times(Mat4.translation(-30,8,-15))
                                     .times(Mat4.scale(2,2,2));
 
         this.shapes.text.draw(context, program_state, message_transform, this.materials.text_image);
-        // this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
+        this.shapes.text.set_string("Oink Oink", context.context);
+        let title_transform = model_transform.times(Mat4.translation(-25,18,-15))
+                                    .times(Mat4.scale(4,4,4));
+        this.shapes.text.draw(context, program_state, title_transform, this.materials.text_image);
+
 
     }
 
@@ -335,6 +338,9 @@ export class Project extends Scene {
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
         .times(Mat4.rotation(Math.PI/3,1,0,0))
 
+        let pig_nose = pig_transform.times(Mat4.translation(1.25, -0.1,0))
+        .times(Mat4.inverse(Mat4.scale(6,6,6)));
+
 
 
 
@@ -353,6 +359,7 @@ export class Project extends Scene {
         this.pig.shapes.pig_eye.draw(context,program_state, pig_left_eye, this.pig.materials.pigeye);
         this.pig.shapes.pig_eye.draw(context,program_state, pig_right_eye, this.pig.materials.pigeye);
 
+        this.pig.shapes.pig_nose.draw(context,program_state, pig_nose, this.pig.materials.pignose);
 
         this.pig.shapes.pig_tail.draw(context,program_state, pig_tail, this.pig.materials.pigtail);
 
@@ -410,10 +417,12 @@ export class Project extends Scene {
         //     pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0));
         // }
 
+        let pig_tail_rotate =  ((Math.PI/2)* (Math.sin(Math.PI*(t))));
 
         let pig_tail = pig_transform.times(Mat4.translation(-1.25, 0, 0))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
-        .times(Mat4.rotation(Math.PI/2,0,1,0));
+        .times(Mat4.rotation(Math.PI/2,0,1,0))
+        .times(Mat4.rotation(pig_tail_rotate,0,0,1));
 
 
         let pig_right_ear = pig_transform.times(Mat4.translation(0.75, 0.5, 0.75))
@@ -446,6 +455,9 @@ export class Project extends Scene {
         let pig_left_eye = pig_transform.times(Mat4.translation(1.25, 0.25,-0.25))
         .times(Mat4.inverse(Mat4.scale(12, 12,12)));
 
+        let pig_nose = pig_transform.times(Mat4.translation(1.25, -0.1,0))
+        .times(Mat4.inverse(Mat4.scale(6,6,6)));
+
         let pig_right_eye = pig_transform.times(Mat4.translation(1.25, 0.25,0.25))
         .times(Mat4.inverse(Mat4.scale(12, 12,12)));
 
@@ -471,6 +483,7 @@ export class Project extends Scene {
 
         this.pig.shapes.pig_eye.draw(context,program_state, pig_left_eye, this.pig.materials.pigeye);
         this.pig.shapes.pig_eye.draw(context,program_state, pig_right_eye, this.pig.materials.pigeye);
+        this.pig.shapes.pig_nose.draw(context,program_state, pig_nose, this.pig.materials.pignose);
 
 
         this.pig.shapes.pig_tail.draw(context,program_state, pig_tail, this.pig.materials.pigtail);
