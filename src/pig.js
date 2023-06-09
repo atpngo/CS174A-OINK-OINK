@@ -53,7 +53,7 @@ export class Pig{
         this.duck = 0;
 
 
-        this.temp = 1;
+        this.temp = 0;
         this.jump_v = 0;
         this.downwards = false;
 
@@ -71,24 +71,25 @@ export class Pig{
 
     jumpPig() {
 
-        if (this.temp >= 1 && this.temp <= 3 && !this.downwards) {
+        if (this.temp >= 0 && this.temp <= 2 && !this.downwards) {
             this.jump_v += 0.005;
             this.temp += this.jump_v;
-            if (this.temp >= 3) {
+            if (this.temp >= 2) {
                 this.downwards = true;
             }
         }
         else {
             this.jump_v += 0.0025;
             this.temp -= this.jump_v;
-            if (this.temp <= 1) {
+            if (this.temp <= 0) {
                 this.jump = false;
-                this.temp = 1;
+                this.temp = 0;
                 this.downwards = false;
                 this.jump_v = 0;
+                this.jump_rotate = 0;
             }
         }
-        return {height: this.temp - 1};
+        return {height: this.temp};
     }
 
 
