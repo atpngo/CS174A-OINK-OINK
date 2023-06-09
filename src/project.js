@@ -36,6 +36,9 @@ export class Project extends Scene {
         this.background_sound_flag = false;
         this.blinking_flag = false;
         this.blinking_count = 0;
+        this.game_loading = false;
+        this.loading_count = 0;
+
 
         this.background_sound = new Audio("assets/audio/background.mp3");
         this.pig_sound = new Audio("assets/audio/pig-grunt.mp3");
@@ -99,7 +102,7 @@ export class Project extends Scene {
         // })
         this.key_triggered_button("Start", ['Enter'], () => {
             if (!this.game_start && !this.game_over) {
-            this.game_start = true;
+            this.game_loading = true;
 
             // loop background audio
             // if (typeof this.background_sound.loop == 'boolean')
@@ -113,10 +116,6 @@ export class Project extends Scene {
             //         this.play();
             //     }, false);
             // }
-            this.background_sound.loop = true;
-            this.background_sound_flag = true;
-
-            this.background_sound.play();
             }
         });
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
@@ -286,13 +285,34 @@ export class Project extends Scene {
 
         // // if (t % 2 == 0) {
         // if (!this.pig.duck) {
+
+        if (!this.game_loading) {
             pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0))
                             .times(Mat4.translation(0,pig_bounce_vertical,pig_bounce_horizontal));
-        // }
-        // }
-        // else {
-        //     pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0));
-        // }
+        }
+
+        if (this.game_loading) {
+            this.loading_count += 0.025;
+            }
+    
+            let pig_rotate = ((Math.PI)*this.loading_count);
+            console.log(this.loading_count);
+    
+            if (this.loading_count >= 1) {
+                this.loading_count = 0;
+                this.game_start = true;
+                this.game_loading = false;
+                this.background_sound.loop = true;
+                this.background_sound_flag = true;
+                this.background_sound.play();
+            }
+
+            let loading_jump = Math.sin(Math.PI*(this.loading_count));
+    
+            if (this.game_loading) {
+                pig_transform = pig_transform.times(Mat4.rotation(pig_rotate,0,1,0))
+                .times(Mat4.translation(0,loading_jump,0));
+            }
 
 
         let pig_tail = pig_transform.times(Mat4.translation(-1.25, 0, 0))
@@ -342,8 +362,6 @@ export class Project extends Scene {
         .times(Mat4.inverse(Mat4.scale(6,6,6)));
 
 
-
-
         this.pig.shapes.pig.draw(context, program_state, pig_transform, this.pig.materials.pig);
 
         this.pig.shapes.pig_leg.draw(context, program_state, pig_front_right_leg, this.pig.materials.pig);
@@ -388,14 +406,13 @@ export class Project extends Scene {
 
         let pig_bounce_horizontal = ((max_pig_angle/2)* (Math.sin(Math.PI*(t))));
 
-
-
         if (this.pig.jump) {
             let height = this.pig.jumpPig().height;
-            // let jump_angle = this.pig.jumpPig().angle;
 
 
             pig_transform = pig_transform.times(Mat4.translation(0,height,0))
+                               
+
             //                 .times(Mat4.rotation(jump_angle, 0, 0,1));
             // pig_left_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
             // .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
@@ -559,7 +576,11 @@ export class Project extends Scene {
             this.draw_game_over(context,program_state,model_transform);
             this.draw_score(context,program_state,model_transform);
         }
-        else {
+
+        // else if (this.game_loading) {
+
+        // }
+        else{
             this.draw_start(context,program_state,model_transform);
             this.draw_loading_pig(context,program_state,model_transform);
         }
