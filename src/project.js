@@ -169,9 +169,6 @@ export class Project extends Scene {
                 this.pig_sound.play();
             }
         })
-        this.key_triggered_button("GameOver", ['g'], () => {
-            this.game_over = !this.game_over;
-        })
         this.key_triggered_button("Toggle Background Music", ['m'], () => {
             // loop background audio
             if (this.game_start) {
@@ -290,27 +287,6 @@ export class Project extends Scene {
         let pig_bounce_horizontal = ((max_pig_angle/2)* (Math.sin(Math.PI*(t))));
 
 
-
-        // if (this.pig.jump) {
-        //     let height = this.pig.jumpPig().height;
-        //     // let jump_angle = this.pig.jumpPig().angle;
-
-
-        //     pig_transform = pig_transform.times(Mat4.translation(0,height,0))
-        //     //                 .times(Mat4.rotation(jump_angle, 0, 0,1));
-        //     // pig_left_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
-        //     // .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
-        // }
-
-        // if(this.pig.duck) {
-        //     let duck = this.pig.pigDuck();
-        //     pig_transform = pig_transform.times(Mat4.translation(0,(duck-1.25),0))
-        //     .times(Mat4.scale(1, duck,1));
-        // }
-
-        // // if (t % 2 == 0) {
-        // if (!this.pig.duck) {
-
         if (!this.game_loading) {
             pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0))
                             .times(Mat4.translation(0,pig_bounce_vertical,pig_bounce_horizontal));
@@ -321,7 +297,6 @@ export class Project extends Scene {
             }
     
             let pig_rotate = ((Math.PI)*this.loading_count);
-            // console.log(this.loading_count);
     
             if (this.loading_count >= 1) {
                 this.loading_count = 0;
@@ -438,9 +413,6 @@ export class Project extends Scene {
             pig_transform = pig_transform.times(Mat4.translation(0,height,0))
                                
 
-            //                 .times(Mat4.rotation(jump_angle, 0, 0,1));
-            // pig_left_leg = pig_transform.times(Mat4.translation(0, -0.8,0.75))
-            // .times(Mat4.inverse(Mat4.scale(-4, -4,-4)));
         }
 
         if(this.pig.duck) {
@@ -449,15 +421,10 @@ export class Project extends Scene {
             .times(Mat4.scale(1, duck,1));
         }
 
-        // if (t % 2 == 0) {
         if (!this.pig.duck) {
             pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0))
                             .times(Mat4.translation(0,pig_bounce_vertical,pig_bounce_horizontal));
         }
-        // }
-        // else {
-        //     pig_transform = pig_transform.times(Mat4.rotation(pig_bounce,1,0,0));
-        // }
 
         let pig_tail_rotate =  ((Math.PI/2)* (Math.sin(Math.PI*(t))));
 
@@ -474,13 +441,11 @@ export class Project extends Scene {
 
         let pig_left_ear = pig_transform.times(Mat4.translation(0.75, 0.5, -0.75))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
-        // .times(Mat4.rotation(Math.PI,0,1,0))
         .times(Mat4.rotation(Math.PI,1,0,0));
 
 
         let pig_front_right_leg = pig_transform.times(Mat4.translation(0.75, -0.5,0.75))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
-        // .times(Mat4.rotation(Math.PI/3,1,0,0));
 
 
         let pig_front_left_leg = pig_transform.times(Mat4.translation(0.75, -0.5,-0.75))
@@ -670,10 +635,6 @@ export class Project extends Scene {
                 this.obstacles.push(new Obstacle(getRandomNumber(3), getRandomNumber(3), i*this.OBSTACLE_OFFSET));
             }
         }
-
-        // else if (this.game_loading) {
-
-        // }
         else{
             this.draw_start(context,program_state,model_transform);
             this.draw_loading_pig(context,program_state,model_transform);
