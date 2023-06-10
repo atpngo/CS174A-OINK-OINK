@@ -129,18 +129,6 @@ export class Project extends Scene {
             if (!this.game_start && !this.game_over) {
             this.game_loading = true;
 
-            // loop background audio
-            // if (typeof this.background_sound.loop == 'boolean')
-            // {
-            //     this.background_sound.loop = true;
-            // }
-            // else
-            // {
-            //     this.background_sound.addEventListener('ended', function() {
-            //         this.currentTime = 0;
-            //         this.play();
-            //     }, false);
-            // }
             }
         });
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
@@ -232,7 +220,6 @@ export class Project extends Scene {
           else {
             this.shapes.text.draw(context, program_state, score_transform, this.materials.text_image);
           }
-          // this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
   
     }
 
@@ -245,7 +232,6 @@ export class Project extends Scene {
                                     .times(Mat4.scale(3,3,3));
 
         this.shapes.text.draw(context, program_state, message_transform, this.materials.text_image);
-        // this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
 
   }
 
@@ -327,13 +313,11 @@ export class Project extends Scene {
 
         let pig_left_ear = pig_transform.times(Mat4.translation(0.75, 0.5, -0.75))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
-        // .times(Mat4.rotation(Math.PI,0,1,0))
         .times(Mat4.rotation(Math.PI,1,0,0));
 
 
         let pig_front_right_leg = pig_transform.times(Mat4.translation(0.75, -0.5,0.75))
         .times(Mat4.inverse(Mat4.scale(-4, -4,-4)))
-        // .times(Mat4.rotation(Math.PI/3,1,0,0));
 
 
         let pig_front_left_leg = pig_transform.times(Mat4.translation(0.75, -0.5,-0.75))
@@ -536,7 +520,6 @@ export class Project extends Scene {
 
     display(context, program_state) {
         if (!context.scratchpad.controls) {
-            // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             program_state.set_camera(
                 Mat4.identity()
                 .times(Mat4.translation(0, -2, -58))
@@ -544,22 +527,13 @@ export class Project extends Scene {
 
             
             );
-            // program_state.set_camera(Mat4.rotation(0,0,0));
         }
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 500);
         
         const light_position = vec4(0, 10, 15, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
-        // if (program_state.animation_time > 50 && program_state.animation_time < 100)
-        // {
-        //     console.log(program_state);
-        // }
-        // if (program_state.animation_time > 10000 && program_state.animation_time < 10100)
-        // {
-        //     console.log(program_state);
-        // }
-        // draw sky
+ 
 
         let t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         let model_transform = Mat4.identity();
